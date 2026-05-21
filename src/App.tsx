@@ -27,9 +27,9 @@ export default function App() {
   };
 
   const handleDropActivity = (activityId: string, day: 1 | 2 | 3) => {
-    if (scheduled.some((s) => s.activityId === activityId)) return;
+    if (scheduled.some((s) => String(s.activityId) === String(activityId))) return;
     setActiveDay(day);
-    const activity = activities.find((a) => a.id === activityId);
+    const activity = activities.find((a) => String(a.id) === String(activityId));
     if (activity) {
       setActiveActivity(activity);
     }
@@ -37,7 +37,7 @@ export default function App() {
 
   const activeDayTotal = scheduled
     .filter((item) => item.day === activeDay)
-    .reduce((sum, item) => sum + (activities.find((a) => a.id === item.activityId)?.price || 0), 0);
+    .reduce((sum, item) => sum + (activities.find((a) => String(a.id) === String(item.activityId))?.price || 0), 0);
 
   return (
     <div 
@@ -66,7 +66,7 @@ export default function App() {
             <ActivityList
               activities={activities}
               onAddClick={setActiveActivity}
-              scheduledIds={scheduled.map((s) => s.activityId)}
+              scheduledIds={scheduled.map((s) => String(s.activityId))}
             />
           </section>
 

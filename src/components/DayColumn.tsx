@@ -27,10 +27,15 @@ export default function DayColumn({
         e.preventDefault();
         setIsDragOver(true);
       }}
+      onDragEnter={(e) => {
+        e.preventDefault();
+        setIsDragOver(true);
+      }}
       onDragLeave={() => setIsDragOver(false)}
       onDrop={(e) => {
+        e.preventDefault();
         setIsDragOver(false);
-        const activityId = e.dataTransfer.getData("activityId");
+        const activityId = e.dataTransfer.getData("activityId") || e.dataTransfer.getData("text/plain");
         if (activityId) {
           onDropActivity(activityId);
         }
@@ -44,7 +49,7 @@ export default function DayColumn({
       <div className="flex flex-col flex-grow overflow-y-auto mb-4 pr-1">
         {dayItems.length > 0 ? (
           dayItems.map((item) => {
-            const activity = activities.find((a) => a.id === item.activityId);
+            const activity = activities.find((a) => String(a.id) === String(item.activityId));
             if (!activity) return null;
 
             return (

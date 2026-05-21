@@ -168,7 +168,7 @@ export default function ActivityList({
               key={activity.id}
               activity={activity}
               onAdd={onAddClick}
-              isAlreadySelected={scheduledIds.includes(activity.id)}
+              isAlreadySelected={scheduledIds.includes(String(activity.id))}
             />
           ))}
         </div>
