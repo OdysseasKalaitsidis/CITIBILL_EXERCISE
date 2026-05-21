@@ -1,0 +1,17 @@
+[
+  { "id": 1, "title": "Περιήγηση στην Ακρόπολη", "tags": ["history","outdoors"], "price": 35.0, "description": "Ξενάγηση στον Ιερό Βράχο και άλλα δημοφιλή μνημεία." },
+  { "id": 2, "title": "Street Food Festival", "tags": ["food","walking"], "price": 22.0, "description": "Δοκιμή τοπικών γεύσεων σε υπαίθριες αγορές." },
+  { "id": 3, "title": "Μουσείο Τέχνης", "tags": ["museum","indoors","history"], "price": 12.0, "description": "Επίσκεψη στο Μουσείο Τέχνης." },
+  { "id": 4, "title": "Bike riding", "tags": ["outdoors","sport"], "price": 30.0, "description": "Ομαδική βόλτα σε τουριστικά αξιοθέατα." },
+  { "id": 5, "title": "Μάθημα Μιξολογίας σε Rooftop", "tags": ["indoors","nightlife"], "price": 40.0, "description": "Εισαγωγή σε κλασσικά και signature cocktails." },
+  { "id": 6, "title": "Περίπατος-Ξενάγηση στην Πλάκα", "tags": ["walking","history"], "price": 18.0, "description": "Σοκάκια, νεοκλασικά και κρυμμένες αυλές." },
+  { "id": 7, "title": "Αρχαία & Ρωμαϊκή Αγορά", "tags": ["history","outdoors"], "price": 15.0, "description": "Αρχαιολογικοί χώροι στο ιστορικό κέντρο." },
+  { "id": 8, "title": "Γευσιγνωσία Ελαιολάδου", "tags": ["food","indoors"], "price": 28.0, "description": "Ποικιλίες, αρώματα και τεχνικές παραγωγής." },
+  { "id": 9, "title": "Φωτογραφία", "tags": ["outdoors","creative"], "price": 20.0, "description": "Σημεία με ενδιαφέρον για λήψεις στο κέντρο της πόλης." },
+  { "id": 10, "title": "Μουσείο Μπενάκη", "tags": ["museum","indoors"], "price": 12.0, "description": "Ελληνικός πολιτισμός από προϊστορία έως σήμερα." },
+  { "id": 11, "title": "Μάθημα Ελληνικών Χορών", "tags": ["indoors","culture","sport"], "price": 24.0, "description": "Βήματα, ρυθμοί και μικρή παράσταση στο τέλος." },
+  { "id": 12, "title": "Ημερήσια Πεζοπορία στον Υμηττό", "tags": ["outdoors","hiking"], "price": 0.0, "description": "Αυτο-οργανωμένη διαδρομή." },
+  { "id": 13, "title": "Street Art Tour", "tags": ["walking","creative"], "price": 17.0, "description": "Graffiti και murals σε εναλλακτικές γειτονιές." },
+  { "id": 14, "title": "Μάθημα Μαγειρικής", "tags": ["food","indoors","creative"], "price": 38.0, "description": "Παραδοσιακές συνταγές και δοκιμή στο τέλος." },
+  { "id": 15, "title": "Βραδινή Περιήγηση στο Κέντρο", "tags": ["nightlife","walking"], "price": 0.0, "description": "Ξενάγηση σε φωτισμένα μνημεία." }
+]
