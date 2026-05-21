@@ -1,5 +1,4 @@
 import type { Activity } from "@/types";
-import { getCategoryName } from "@/utils/activityHelpers";
 
 interface ActivityCardProps {
   activity: Activity;
@@ -8,89 +7,54 @@ interface ActivityCardProps {
 }
 
 export default function ActivityCard({ activity, onAdd, isAlreadySelected }: ActivityCardProps) {
-  const categoryName = getCategoryName(activity);
-
   return (
     <div 
-      className="rounded-[12px] flex flex-col justify-between transition-colors duration-200 h-full text-left"
-      style={{
-        backgroundColor: "var(--bg)",
-        border: "1px solid var(--border)",
-        padding: "16px",
-      }}
+      className="rounded-[12px] flex flex-col justify-between transition-colors duration-200 h-full text-left bg-[var(--bg)] border border-[var(--border)] p-4"
     >
       <div className="space-y-2 flex-grow">
         {/* Line 1: Category Tag */}
         <span 
-          style={{
-            fontSize: "10px",
-            fontWeight: 600,
-            letterSpacing: "0.08em",
-            textTransform: "uppercase",
-            color: "var(--accent)",
-            display: "block",
-          }}
+          className="text-[10px] font-semibold tracking-[0.08em] uppercase text-[var(--accent)]"
         >
-          {categoryName}
+          {activity.tags.join(" · ")}
         </span>
 
         {/* Line 2: Title */}
         <h3 
-          className="line-clamp-2 leading-tight"
-          style={{
-            fontSize: "15px",
-            fontWeight: 600,
-            color: "var(--text)",
-          }}
+          className="text-[15px] font-semibold text-[var(--text)] line-clamp-2 leading-tight"
         >
           {activity.title}
         </h3>
 
         {/* Line 3: Description */}
-        <p 
-          className="line-clamp-2 leading-relaxed"
-          style={{
-            fontSize: "13px",
-            color: "var(--muted)",
-          }}
-        >
-          {activity.description}
-        </p>
+        {activity.description && (
+          <p 
+            className="text-[13px] text-[var(--muted)] line-clamp-2 leading-normal"
+          >
+            {activity.description}
+          </p>
+        )}
       </div>
 
-      {/* Bottom row: Price left + Add button right */}
-      <div className="flex items-center justify-between mt-4">
+      {/* Bottom Row */}
+      <div className="flex justify-between items-center mt-4">
         <span 
-          style={{
-            fontSize: "13px",
-            fontWeight: 700,
-            color: "var(--text)",
-          }}
+          className="text-[13px] font-bold text-[var(--text)]"
         >
-          {activity.cost === 0 ? "Δωρεάν" : `${activity.cost.toFixed(2)}€`}
+          {activity.price > 0 ? `${activity.price.toFixed(2)}€` : "Δωρεάν"}
         </span>
 
         {isAlreadySelected ? (
           <span 
-            className="select-none flex-shrink-0"
-            style={{
-              fontSize: "11px",
-              fontWeight: 500,
-              color: "var(--muted)",
-            }}
+            className="text-[11px] font-medium text-[var(--muted)]"
           >
             Προστέθηκε
           </span>
         ) : (
           <button
+            type="button"
             onClick={() => onAdd(activity)}
-            className="w-[32px] h-[32px] rounded-full flex items-center justify-center border-none text-white transition-all cursor-pointer flex-shrink-0"
-            style={{ 
-              fontSize: "18px", 
-              fontWeight: "normal",
-              backgroundColor: "var(--accent)",
-              color: "var(--btn-text)",
-            }}
+            className="w-8 h-8 rounded-full flex items-center justify-center bg-[var(--accent)] text-white text-lg font-normal border-none transition-transform hover:scale-105 active:scale-95 cursor-pointer"
           >
             +
           </button>

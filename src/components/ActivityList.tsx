@@ -1,44 +1,49 @@
+import { useState } from "react";
 import type { Activity } from "@/types";
 import { Search } from "lucide-react";
 import ActivityCard from "./ActivityCard";
-import { getCategoryName, normalizeText } from "@/utils/activityHelpers";
+
+const normalizeText = (str: string): string => {
+  return str
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "");
+};
 
 interface ActivityListProps {
   activities: Activity[];
-  filterText: string;
-  onFilterTextChange: (text: string) => void;
-  sortBy: "title_asc" | "title_desc" | "cost_asc" | "cost_desc" | null;
-  onSortByChange: (sort: "title_asc" | "title_desc" | "cost_asc" | "cost_desc" | null) => void;
   onAddClick: (activity: Activity) => void;
   scheduledIds: string[];
 }
 
 export default function ActivityList({
   activities,
-  filterText,
-  onFilterTextChange,
-  sortBy,
-  onSortByChange,
   onAddClick,
   scheduledIds,
 }: ActivityListProps) {
+  const [filterText, setFilterText] = useState("");
+  const [activeTag, setActiveTag] = useState<string | null>(null);
+  const [sortBy, setSortBy] = useState<"title_asc" | "title_desc" | "price_asc" | "price_desc" | null>(null);
+
+  const allTags = [...new Set(activities.flatMap((a) => a.tags))];
+
   // Filter & Sort
   const processedActivities = activities
+    .filter((act) => !activeTag || act.tags.includes(activeTag))
     .filter((act) => {
       const matchText = normalizeText(filterText);
-      const categoryName = getCategoryName(act);
       return (
         normalizeText(act.title).includes(matchText) ||
         (act.description && normalizeText(act.description).includes(matchText)) ||
-        normalizeText(categoryName).includes(matchText)
+        act.tags.some((t) => normalizeText(t).includes(matchText))
       );
     })
     .sort((a, b) => {
-      if (sortBy === "cost_asc") {
-        return a.cost - b.cost;
+      if (sortBy === "price_asc") {
+        return a.price - b.price;
       }
-      if (sortBy === "cost_desc") {
-        return b.cost - a.cost;
+      if (sortBy === "price_desc") {
+        return b.price - a.price;
       }
       if (sortBy === "title_asc") {
         return a.title.localeCompare(b.title, "el");
@@ -64,7 +69,7 @@ export default function ActivityList({
             type="text"
             placeholder="Αναζήτηση δραστηριότητας..."
             value={filterText}
-            onChange={(e) => onFilterTextChange(e.target.value)}
+            onChange={(e) => setFilterText(e.target.value)}
             className="w-full pl-10 pr-4 py-[10px] text-sm font-normal focus:outline-none transition-all"
             style={{
               borderRadius: "24px",
@@ -82,11 +87,11 @@ export default function ActivityList({
             value={sortBy || ""}
             onChange={(e) => {
               const val = e.target.value;
-              onSortByChange(
+              setSortBy(
                 val === "title_asc" ||
                 val === "title_desc" ||
-                val === "cost_asc" ||
-                val === "cost_desc"
+                val === "price_asc" ||
+                val === "price_desc"
                   ? val
                   : null
               );
@@ -108,11 +113,11 @@ export default function ActivityList({
             <option value="" className="bg-[var(--bg)] text-[var(--muted)]">
               Ταξινόμηση ανά...
             </option>
-            <option value="cost_asc" className="bg-[var(--bg)] text-[var(--text)]">
-              Κόστος (Χαμηλό σε Υψηλό)
+            <option value="price_asc" className="bg-[var(--bg)] text-[var(--text)]">
+              Τιμή (Χαμηλή σε Υψηλή)
             </option>
-            <option value="cost_desc" className="bg-[var(--bg)] text-[var(--text)]">
-              Κόστος (Υψηλό σε Χαμηλό)
+            <option value="price_desc" className="bg-[var(--bg)] text-[var(--text)]">
+              Τιμή (Υψηλή σε Χαμηλή)
             </option>
             <option value="title_asc" className="bg-[var(--bg)] text-[var(--text)]">
               Τίτλος (Α - Ω)
@@ -122,6 +127,37 @@ export default function ActivityList({
             </option>
           </select>
         </div>
+      </div>
+
+      {/* Tag Buttons Filter */}
+      <div className="flex flex-wrap gap-2 pb-2">
+        <button
+          type="button"
+          onClick={() => setActiveTag(null)}
+          className="px-4 py-2 text-xs font-semibold rounded-full border transition-all cursor-pointer focus:outline-none"
+          style={{
+            backgroundColor: activeTag === null ? "var(--text)" : "transparent",
+            borderColor: activeTag === null ? "var(--text)" : "var(--border)",
+            color: activeTag === null ? "var(--bg)" : "var(--text)",
+          }}
+        >
+          Όλα
+        </button>
+        {allTags.map((tag) => (
+          <button
+            key={tag}
+            type="button"
+            onClick={() => setActiveTag(tag)}
+            className="px-4 py-2 text-xs font-semibold rounded-full border transition-all cursor-pointer focus:outline-none"
+            style={{
+              backgroundColor: activeTag === tag ? "var(--text)" : "transparent",
+              borderColor: activeTag === tag ? "var(--text)" : "var(--border)",
+              color: activeTag === tag ? "var(--bg)" : "var(--text)",
+            }}
+          >
+            {tag}
+          </button>
+        ))}
       </div>
 
       {/* Grid List */}

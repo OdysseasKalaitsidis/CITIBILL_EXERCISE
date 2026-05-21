@@ -1,13 +1,14 @@
 export interface Activity {
   id: string
   title: string
-  cost: number
+  price: number
   description?: string
+  tags: string[]
 }
 
 export interface ScheduledActivity {
   activityId: string
   day: 1 | 2 | 3
-  startDateTime: string  // ISO string
-  endDateTime: string
+  startTime: string  // slot string e.g. "09:00"
+  endTime: string    // slot string e.g. "12:00"
 }

@@ -1,4 +1,11 @@
+import { useState } from "react";
 import type { ScheduledActivity as ScheduledType, Activity } from "@/types";
+
+const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
+  const hours = String(Math.floor(i / 2)).padStart(2, "0");
+  const minutes = i % 2 === 0 ? "00" : "30";
+  return `${hours}:${minutes}`;
+});
 
 interface ScheduledActivityProps {
   scheduledItem: ScheduledType;
@@ -9,29 +16,9 @@ interface ScheduledActivityProps {
   onToggleExpand: () => void;
 }
 
-// 48 time slots in 30-minute intervals
-const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
-  const hours = String(Math.floor(i / 2)).padStart(2, "0");
-  const minutes = i % 2 === 0 ? "00" : "30";
-  return `${hours}:${minutes}`;
-});
-
 const formatTimeRange = (start: string, end: string) => {
   if (!start || !end) return "";
-  try {
-    const startDate = new Date(start);
-    const endDate = new Date(end);
-    const pad = (num: number) => String(num).padStart(2, "0");
-    
-    const startHours = pad(startDate.getHours());
-    const startMins = pad(startDate.getMinutes());
-    const endHours = pad(endDate.getHours());
-    const endMins = pad(endDate.getMinutes());
-
-    return `${startHours}:${startMins} - ${endHours}:${endMins}`;
-  } catch {
-    return "";
-  }
+  return `${start} - ${end}`;
 };
 
 export default function ScheduledActivity({
@@ -42,7 +29,41 @@ export default function ScheduledActivity({
   isExpanded,
   onToggleExpand,
 }: ScheduledActivityProps) {
-  const timeRangeStr = formatTimeRange(scheduledItem.startDateTime, scheduledItem.endDateTime);
+  const [inlineError, setInlineError] = useState<string | null>(null);
+
+  const currentStart = scheduledItem.startTime || "09:00";
+  const currentEnd = scheduledItem.endTime || "12:00";
+
+  const [localStart, setLocalStart] = useState(currentStart);
+  const [localEnd, setLocalEnd] = useState(currentEnd);
+
+  const [prevStart, setPrevStart] = useState(currentStart);
+  const [prevEnd, setPrevEnd] = useState(currentEnd);
+
+  if (currentStart !== prevStart || currentEnd !== prevEnd) {
+    setPrevStart(currentStart);
+    setPrevEnd(currentEnd);
+    setLocalStart(currentStart);
+    setLocalEnd(currentEnd);
+    setInlineError(null);
+  }
+
+  const timeRangeStr = formatTimeRange(scheduledItem.startTime, scheduledItem.endTime);
+
+  const validateChange = (start: string, end: string): string | null => {
+    if (end <= start) {
+      return "Το τέλος πρέπει να είναι μετά την αρχή";
+    }
+    const parseTimeToMinutes = (t: string) => {
+      const [h, m] = t.split(":").map(Number);
+      return h * 60 + m;
+    };
+    const durationMinutes = parseTimeToMinutes(end) - parseTimeToMinutes(start);
+    if (durationMinutes > 7 * 60) {
+      return "Μέγιστη διάρκεια 7 ώρες";
+    }
+    return null;
+  };
 
   return (
     <div 
@@ -58,7 +79,7 @@ export default function ScheduledActivity({
         className="flex items-center justify-between py-3 cursor-pointer select-none gap-2 text-left"
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-grow">
-          {/* Title: 13px 600 */}
+          {/* Title */}
           <h4 
             className="text-[13px] font-semibold leading-tight line-clamp-1" 
             style={{ color: "var(--text)" }}
@@ -66,7 +87,7 @@ export default function ScheduledActivity({
             {activity.title}
           </h4>
 
-          {/* Time range: 12px, color var(--muted) */}
+          {/* Time range */}
           <span 
             className="text-[12px] font-normal leading-none" 
             style={{ color: "var(--muted)" }}
@@ -74,12 +95,12 @@ export default function ScheduledActivity({
             {timeRangeStr}
           </span>
 
-          {/* Cost: 13px, font-weight 600, color var(--text) */}
+          {/* Price */}
           <span 
             className="leading-none" 
             style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}
           >
-            {activity.cost === 0 ? "Δωρεάν" : `${activity.cost.toFixed(2)}€`}
+            {activity.price === 0 ? "Δωρεάν" : `${activity.price.toFixed(2)}€`}
           </span>
         </div>
 
@@ -103,7 +124,7 @@ export default function ScheduledActivity({
       {/* Expandable selectors section */}
       <div 
         style={{
-          maxHeight: isExpanded ? "120px" : "0px",
+          maxHeight: isExpanded ? "150px" : "0px",
           overflow: "hidden",
           transition: "max-height 200ms ease",
         }}
@@ -114,10 +135,20 @@ export default function ScheduledActivity({
           <div className="space-y-1 text-left">
             <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted)" }}>Από</span>
             <select
-              value={scheduledItem.startDateTime.split("T")[1]?.substring(0, 5) || "09:00"}
+              value={localStart}
               onChange={(e) => {
-                const datePart = scheduledItem.startDateTime.split("T")[0];
-                onUpdate({ ...scheduledItem, startDateTime: `${datePart}T${e.target.value}` });
+                setLocalStart(e.target.value);
+                const nextStart = e.target.value;
+                const nextEnd = localEnd;
+                
+                const err = validateChange(nextStart, nextEnd);
+                if (err) {
+                  setInlineError(err);
+                  return;
+                }
+                
+                setInlineError(null);
+                onUpdate({ ...scheduledItem, startTime: nextStart });
               }}
               className="w-full text-xs py-1.5 px-2.5 rounded focus:outline-none cursor-pointer"
               style={{ 
@@ -138,10 +169,20 @@ export default function ScheduledActivity({
           <div className="space-y-1 text-left">
             <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted)" }}>Έως</span>
             <select
-              value={scheduledItem.endDateTime.split("T")[1]?.substring(0, 5) || "12:00"}
+              value={localEnd}
               onChange={(e) => {
-                const datePart = scheduledItem.endDateTime.split("T")[0];
-                onUpdate({ ...scheduledItem, endDateTime: `${datePart}T${e.target.value}` });
+                setLocalEnd(e.target.value);
+                const nextStart = localStart;
+                const nextEnd = e.target.value;
+                
+                const err = validateChange(nextStart, nextEnd);
+                if (err) {
+                  setInlineError(err);
+                  return;
+                }
+                
+                setInlineError(null);
+                onUpdate({ ...scheduledItem, endTime: nextEnd });
               }}
               className="w-full text-xs py-1.5 px-2.5 rounded focus:outline-none cursor-pointer"
               style={{ 
@@ -158,6 +199,14 @@ export default function ScheduledActivity({
             </select>
           </div>
         </div>
+        {inlineError && (
+          <div 
+            className="pb-3 text-left"
+            style={{ color: "var(--accent)", fontSize: "11px" }}
+          >
+            {inlineError}
+          </div>
+        )}
       </div>
     </div>
   );
