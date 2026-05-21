@@ -26,6 +26,15 @@ export default function App() {
     setScheduled(scheduled.filter((item) => item.activityId !== activityId));
   };
 
+  const handleDropActivity = (activityId: string, day: 1 | 2 | 3) => {
+    if (scheduled.some((s) => s.activityId === activityId)) return;
+    setActiveDay(day);
+    const activity = activities.find((a) => a.id === activityId);
+    if (activity) {
+      setActiveActivity(activity);
+    }
+  };
+
   const activeDayTotal = scheduled
     .filter((item) => item.day === activeDay)
     .reduce((sum, item) => sum + (activities.find((a) => a.id === item.activityId)?.price || 0), 0);
@@ -92,6 +101,7 @@ export default function App() {
                   activities={activities}
                   onUpdateItem={handleUpdateItem}
                   onRemoveItem={handleRemoveItem}
+                  onDropActivity={(actId) => handleDropActivity(actId, activeDay)}
                 />
               </div>
 

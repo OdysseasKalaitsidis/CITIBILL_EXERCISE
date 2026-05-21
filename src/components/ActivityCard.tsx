@@ -9,7 +9,12 @@ interface ActivityCardProps {
 export default function ActivityCard({ activity, onAdd, isAlreadySelected }: ActivityCardProps) {
   return (
     <div 
+      draggable={!isAlreadySelected}
+      onDragStart={(e) => {
+        e.dataTransfer.setData("activityId", activity.id);
+      }}
       className="rounded-[12px] flex flex-col justify-between transition-colors duration-200 h-full text-left bg-[var(--bg)] border border-[var(--border)] p-4"
+      style={{ cursor: isAlreadySelected ? "default" : "grab" }}
     >
       <div className="space-y-2 flex-grow">
         {/* Line 1: Category Tag */}

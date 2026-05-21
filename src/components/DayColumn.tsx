@@ -8,6 +8,7 @@ interface DayColumnProps {
   activities: Activity[];
   onUpdateItem: (activityId: string, updated: ScheduledType) => void;
   onRemoveItem: (activityId: string) => void;
+  onDropActivity: (activityId: string) => void;
 }
 
 export default function DayColumn({
@@ -15,11 +16,30 @@ export default function DayColumn({
   activities,
   onUpdateItem,
   onRemoveItem,
+  onDropActivity,
 }: DayColumnProps) {
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [isDragOver, setIsDragOver] = useState(false);
 
   return (
-    <div className="flex flex-col flex-grow min-h-[300px] h-full bg-transparent">
+    <div 
+      onDragOver={(e) => {
+        e.preventDefault();
+        setIsDragOver(true);
+      }}
+      onDragLeave={() => setIsDragOver(false)}
+      onDrop={(e) => {
+        setIsDragOver(false);
+        const activityId = e.dataTransfer.getData("activityId");
+        if (activityId) {
+          onDropActivity(activityId);
+        }
+      }}
+      className="flex flex-col flex-grow min-h-[300px] h-full bg-transparent p-2 transition-all duration-200 rounded-[12px]"
+      style={{
+        border: isDragOver ? "1px solid var(--accent)" : "1px solid transparent",
+      }}
+    >
       {/* Items list */}
       <div className="flex flex-col flex-grow overflow-y-auto mb-4 pr-1">
         {dayItems.length > 0 ? (
