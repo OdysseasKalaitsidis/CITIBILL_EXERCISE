@@ -6,8 +6,7 @@
 
 ## Εργαλεία
 
--- React 19 + TypeScript
-
+- React 19 + TypeScript
 - Vite
 - Tailwind CSS
 - Lucide React
