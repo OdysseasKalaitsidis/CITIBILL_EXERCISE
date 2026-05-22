@@ -41,7 +41,7 @@ export default function ScheduledActivity({
     setLocalStart(currentStart);
     setLocalEnd(currentEnd);
     setInlineError(null);
-  }, [currentStart, currentEnd]);
+  }, [currentStart, currentEnd, isExpanded]);
 
   const validateInlineChange = (start: string, end: string): string | null => {
     const baseError = validateChange(start, end);
