@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import type { Activity, ScheduledActivity, RawActivity } from "@/types";
 import ActivityList from "@/components/ActivityList";
 import DayColumn from "@/components/DayColumn";
@@ -58,21 +58,25 @@ export default function App() {
     }
   };
 
-  const activeDayTotal = scheduled
-    .filter((scheduledItem) => scheduledItem.day === activeDay)
-    .reduce((accumulatedTotal, scheduledItem) => {
+  const activeDayTotal = useMemo(() => {
+    return scheduled
+      .filter((scheduledItem) => scheduledItem.day === activeDay)
+      .reduce((accumulatedTotal, scheduledItem) => {
+        const matchedActivity = ACTIVITIES.find(
+          (activityItem) => activityItem.id === scheduledItem.activityId,
+        );
+        return accumulatedTotal + (matchedActivity?.price || 0);
+      }, 0);
+  }, [scheduled, activeDay]);
+
+  const tripTotal = useMemo(() => {
+    return scheduled.reduce((accumulatedTotal, scheduledItem) => {
       const matchedActivity = ACTIVITIES.find(
         (activityItem) => activityItem.id === scheduledItem.activityId,
       );
       return accumulatedTotal + (matchedActivity?.price || 0);
     }, 0);
-
-  const tripTotal = scheduled.reduce((accumulatedTotal, scheduledItem) => {
-    const matchedActivity = ACTIVITIES.find(
-      (activityItem) => activityItem.id === scheduledItem.activityId,
-    );
-    return accumulatedTotal + (matchedActivity?.price || 0);
-  }, 0);
+  }, [scheduled]);
 
   const handleThemeToggle = () => {
     setTheme(theme === "light" ? "dark" : "light");
@@ -115,7 +119,6 @@ export default function App() {
             onClearAll={() => setScheduled([])}
           >
             <DayColumn
-              day={activeDay}
               dayItems={scheduled.filter((scheduledItem) => scheduledItem.day === activeDay)}
               activities={ACTIVITIES}
               onUpdateItem={handleUpdateItem}

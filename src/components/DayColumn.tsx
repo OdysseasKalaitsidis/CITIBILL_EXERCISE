@@ -4,7 +4,6 @@ import ScheduledActivity from "./ScheduledActivity";
 import { hasConflict } from "@/utils/schedulingUtils";
 
 interface DayColumnProps {
-  day: 1 | 2 | 3;
   dayItems: ScheduledType[];
   activities: Activity[];
   onUpdateItem: (activityId: string, updated: ScheduledType) => void;

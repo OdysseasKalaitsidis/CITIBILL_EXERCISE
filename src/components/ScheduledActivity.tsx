@@ -1,6 +1,10 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { ScheduledActivity as ScheduledType, Activity } from "@/types";
-import { formatTimeRange, validateChange } from "@/utils/time";
+import {
+  formatTimeRange,
+  validateChange,
+  parseTimeToMinutes,
+} from "@/utils/time";
 import TimeSlotSelectors from "./TimeSlotSelectors";
 
 interface ScheduledActivityProps {
@@ -31,26 +35,33 @@ export default function ScheduledActivity({
 
   const [localStart, setLocalStart] = useState(currentStart);
   const [localEnd, setLocalEnd] = useState(currentEnd);
-  const [prevTimes, setPrevTimes] = useState([currentStart, currentEnd]);
 
-  if (currentStart !== prevTimes[0] || currentEnd !== prevTimes[1]) {
-    setPrevTimes([currentStart, currentEnd]);
-    setLocalStart(currentStart);
-    setLocalEnd(currentEnd);
-    setInlineError(null);
-  }
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setLocalStart(currentStart);
+      setLocalEnd(currentEnd);
+      setInlineError(null);
+    }, 0);
+    return () => clearTimeout(timer);
+  }, [currentStart, currentEnd]);
 
   const validateInlineChange = (start: string, end: string): string | null => {
     const baseError = validateChange(start, end);
     if (baseError) return baseError;
 
-    const hasOverlap = dayItems.some(
-      (otherItem) =>
-        otherItem.activityId !== scheduledItem.activityId &&
-        start < otherItem.endTime &&
-        end > otherItem.startTime,
-    );
-    return hasOverlap ? "Υπάρχει επικάλυψη ωραρίου με άλλη δραστηριότητα" : null;
+    const startMins = parseTimeToMinutes(start);
+    const endMins = parseTimeToMinutes(end);
+
+    const hasOverlap = dayItems.some((otherItem) => {
+      if (otherItem.activityId === scheduledItem.activityId) return false;
+      const otherStartMins = parseTimeToMinutes(otherItem.startTime);
+      const otherEndMins = parseTimeToMinutes(otherItem.endTime);
+      return startMins < otherEndMins && endMins > otherStartMins;
+    });
+
+    return hasOverlap
+      ? "Υπάρχει επικάλυψη ωραρίου με άλλη δραστηριότητα"
+      : null;
   };
 
   const handleStartChange = (nextStart: string) => {
@@ -71,7 +82,10 @@ export default function ScheduledActivity({
     }
   };
 
-  const timeRangeStr = formatTimeRange(scheduledItem.startTime, scheduledItem.endTime);
+  const timeRangeStr = formatTimeRange(
+    scheduledItem.startTime,
+    scheduledItem.endTime,
+  );
 
   return (
     <div className="relative flex flex-col border-b border-border bg-transparent transition-all duration-200">
