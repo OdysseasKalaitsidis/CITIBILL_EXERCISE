@@ -85,7 +85,7 @@ export default function App() {
 
   return (
     <div
-      className="min-h-screen p-8 md:p-12 transition-colors duration-300 font-sans antialiased"
+      className="min-h-screen p-4 sm:p-8 md:p-12 transition-colors duration-300 font-sans antialiased"
       style={{ backgroundColor: "var(--bg)", color: "var(--text)" }}
     >
       <div className="max-w-7xl mx-auto space-y-8">

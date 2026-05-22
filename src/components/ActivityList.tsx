@@ -52,7 +52,7 @@ export default function ActivityList({
         onSortChange={handleSortChange}
       />
 
-      <div className="flex flex-wrap gap-2 pb-2">
+      <div className="flex overflow-x-auto flex-nowrap gap-2 pb-2 -mx-4 px-4 sm:mx-0 sm:px-0 sm:flex-wrap [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
         <button
           type="button"
           onClick={() => setActiveTag(null)}

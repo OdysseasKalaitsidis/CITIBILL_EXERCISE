@@ -27,7 +27,7 @@ export default function ScheduleSection({
         Το Πρόγραμμά Μου
       </h2>
       <div
-        className="rounded-xl p-6 flex flex-col min-h-120 transition-colors duration-200"
+        className="rounded-xl p-4 sm:p-6 flex flex-col min-h-80 sm:min-h-120 transition-colors duration-200"
         style={{
           backgroundColor: "var(--bg)",
           border: "1px solid var(--border)",
