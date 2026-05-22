@@ -37,12 +37,10 @@ export default function ScheduledActivity({
   const [localEnd, setLocalEnd] = useState(currentEnd);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setLocalStart(currentStart);
-      setLocalEnd(currentEnd);
-      setInlineError(null);
-    }, 0);
-    return () => clearTimeout(timer);
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setLocalStart(currentStart);
+    setLocalEnd(currentEnd);
+    setInlineError(null);
   }, [currentStart, currentEnd]);
 
   const validateInlineChange = (start: string, end: string): string | null => {
