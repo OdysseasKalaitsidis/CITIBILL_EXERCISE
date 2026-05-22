@@ -14,6 +14,7 @@ interface ScheduledActivityProps {
   onRemove: () => void;
   isExpanded: boolean;
   onToggleExpand: () => void;
+  conflict: boolean;
 }
 
 const formatTimeRange = (start: string, end: string) => {
@@ -28,6 +29,7 @@ export default function ScheduledActivity({
   onRemove,
   isExpanded,
   onToggleExpand,
+  conflict,
 }: ScheduledActivityProps) {
   const [inlineError, setInlineError] = useState<string | null>(null);
 
@@ -48,7 +50,10 @@ export default function ScheduledActivity({
     setInlineError(null);
   }
 
-  const timeRangeStr = formatTimeRange(scheduledItem.startTime, scheduledItem.endTime);
+  const timeRangeStr = formatTimeRange(
+    scheduledItem.startTime,
+    scheduledItem.endTime,
+  );
 
   const validateChange = (start: string, end: string): string | null => {
     if (end <= start) {
@@ -66,7 +71,7 @@ export default function ScheduledActivity({
   };
 
   return (
-    <div 
+    <div
       className="relative flex flex-col transition-all duration-200"
       style={{
         borderBottom: "1px solid var(--border)",
@@ -74,30 +79,30 @@ export default function ScheduledActivity({
       }}
     >
       {/* Top row */}
-      <div 
+      <div
         onClick={onToggleExpand}
         className="flex items-center justify-between py-3 cursor-pointer select-none gap-2 text-left"
       >
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 flex-grow">
+        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 grow">
           {/* Title */}
-          <h4 
-            className="text-[13px] font-semibold leading-tight line-clamp-1" 
+          <h4
+            className="text-[13px] font-semibold leading-tight line-clamp-1"
             style={{ color: "var(--text)" }}
           >
             {activity.title}
           </h4>
 
           {/* Time range */}
-          <span 
-            className="text-[12px] font-normal leading-none" 
+          <span
+            className="text-xs font-normal leading-none"
             style={{ color: "var(--muted)" }}
           >
             {timeRangeStr}
           </span>
 
           {/* Price */}
-          <span 
-            className="leading-none" 
+          <span
+            className="leading-none"
             style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}
           >
             {activity.price === 0 ? "Δωρεάν" : `${activity.price.toFixed(2)}€`}
@@ -111,18 +116,27 @@ export default function ScheduledActivity({
             e.stopPropagation();
             onRemove();
           }}
-          className="text-lg font-normal border-none bg-transparent cursor-pointer transition-colors p-1 flex-shrink-0"
+          className="text-lg font-normal border-none bg-transparent cursor-pointer transition-colors p-1 shrink-0"
           style={{ color: "var(--muted)" }}
-          onMouseEnter={(e) => e.currentTarget.style.color = "var(--text)"}
-          onMouseLeave={(e) => e.currentTarget.style.color = "var(--muted)"}
+          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
+          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}
           title="Αφαίρεση"
         >
           ×
         </button>
       </div>
 
+      {conflict && (
+        <div
+          className="pb-2 text-left"
+          style={{ fontSize: "11px", color: "#FF385C", fontWeight: 500 }}
+        >
+          ⚠ Επικάλυψη ωραρίου
+        </div>
+      )}
+
       {/* Expandable selectors section */}
-      <div 
+      <div
         style={{
           maxHeight: isExpanded ? "150px" : "0px",
           overflow: "hidden",
@@ -133,32 +147,37 @@ export default function ScheduledActivity({
         <div className="grid grid-cols-2 gap-4 pb-3 pt-1">
           {/* Από Selector */}
           <div className="space-y-1 text-left">
-            <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted)" }}>Από</span>
+            <span
+              className="text-[10px] uppercase tracking-wider font-semibold"
+              style={{ color: "var(--muted)" }}
+            >
+              Από
+            </span>
             <select
               value={localStart}
               onChange={(e) => {
                 setLocalStart(e.target.value);
                 const nextStart = e.target.value;
                 const nextEnd = localEnd;
-                
+
                 const err = validateChange(nextStart, nextEnd);
                 if (err) {
                   setInlineError(err);
                   return;
                 }
-                
+
                 setInlineError(null);
                 onUpdate({ ...scheduledItem, startTime: nextStart });
               }}
               className="w-full text-xs py-1.5 px-2.5 rounded focus:outline-none cursor-pointer"
-              style={{ 
+              style={{
                 border: "1px solid var(--border)",
                 backgroundColor: "var(--bg)",
-                color: "var(--text)"
+                color: "var(--text)",
               }}
             >
               {TIME_SLOTS.map((slot) => (
-                <option key={slot} value={slot} className="bg-[var(--bg)] text-[var(--text)]">
+                <option key={slot} value={slot} className="bg-bg text-text">
                   {slot}
                 </option>
               ))}
@@ -167,32 +186,37 @@ export default function ScheduledActivity({
 
           {/* Έως Selector */}
           <div className="space-y-1 text-left">
-            <span className="text-[10px] uppercase tracking-wider font-semibold" style={{ color: "var(--muted)" }}>Έως</span>
+            <span
+              className="text-[10px] uppercase tracking-wider font-semibold"
+              style={{ color: "var(--muted)" }}
+            >
+              Έως
+            </span>
             <select
               value={localEnd}
               onChange={(e) => {
                 setLocalEnd(e.target.value);
                 const nextStart = localStart;
                 const nextEnd = e.target.value;
-                
+
                 const err = validateChange(nextStart, nextEnd);
                 if (err) {
                   setInlineError(err);
                   return;
                 }
-                
+
                 setInlineError(null);
                 onUpdate({ ...scheduledItem, endTime: nextEnd });
               }}
               className="w-full text-xs py-1.5 px-2.5 rounded focus:outline-none cursor-pointer"
-              style={{ 
+              style={{
                 border: "1px solid var(--border)",
                 backgroundColor: "var(--bg)",
-                color: "var(--text)"
+                color: "var(--text)",
               }}
             >
               {TIME_SLOTS.map((slot) => (
-                <option key={slot} value={slot} className="bg-[var(--bg)] text-[var(--text)]">
+                <option key={slot} value={slot} className="bg-bg text-text">
                   {slot}
                 </option>
               ))}
@@ -200,7 +224,7 @@ export default function ScheduledActivity({
           </div>
         </div>
         {inlineError && (
-          <div 
+          <div
             className="pb-3 text-left"
             style={{ color: "var(--accent)", fontSize: "11px" }}
           >

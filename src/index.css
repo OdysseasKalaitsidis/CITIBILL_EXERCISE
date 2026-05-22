@@ -4,6 +4,16 @@
 
 @theme {
   --font-sans: "Plus Jakarta Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  
+  --color-bg: var(--bg);
+  --color-surface: var(--surface);
+  --color-border: var(--border);
+  --color-text: var(--text);
+  --color-muted: var(--muted);
+  --color-accent: var(--accent);
+  --color-tag-bg: var(--tag-bg);
+  --color-tag-color: var(--tag-color);
+  --color-btn-text: var(--btn-text);
 }
 
 :root {

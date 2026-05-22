@@ -11,6 +11,15 @@ interface DayColumnProps {
   onDropActivity: (activityId: string) => void;
 }
 
+function hasConflict(item: ScheduledType, allItems: ScheduledType[]): boolean {
+  return allItems.some(
+    (other) =>
+      other.activityId !== item.activityId &&
+      item.startTime < other.endTime &&
+      item.endTime > other.startTime
+  );
+}
+
 export default function DayColumn({
   dayItems,
   activities,
@@ -22,7 +31,7 @@ export default function DayColumn({
   const [isDragOver, setIsDragOver] = useState(false);
 
   return (
-    <div 
+    <div
       onDragOver={(e) => {
         e.preventDefault();
         setIsDragOver(true);
@@ -35,21 +44,27 @@ export default function DayColumn({
       onDrop={(e) => {
         e.preventDefault();
         setIsDragOver(false);
-        const activityId = e.dataTransfer.getData("activityId") || e.dataTransfer.getData("text/plain");
+        const activityId =
+          e.dataTransfer.getData("activityId") ||
+          e.dataTransfer.getData("text/plain");
         if (activityId) {
           onDropActivity(activityId);
         }
       }}
-      className="flex flex-col flex-grow min-h-[300px] h-full bg-transparent p-2 transition-all duration-200 rounded-[12px]"
+      className="flex flex-col grow min-h-75 h-full bg-transparent p-2 transition-all duration-200 rounded-xl"
       style={{
-        border: isDragOver ? "1px solid var(--accent)" : "1px solid transparent",
+        border: isDragOver
+          ? "1px solid var(--accent)"
+          : "1px solid transparent",
       }}
     >
       {/* Items list */}
-      <div className="flex flex-col flex-grow overflow-y-auto mb-4 pr-1">
+      <div className="flex flex-col grow overflow-y-auto mb-4 pr-1">
         {dayItems.length > 0 ? (
           dayItems.map((item) => {
-            const activity = activities.find((a) => String(a.id) === String(item.activityId));
+            const activity = activities.find(
+              (a) => String(a.id) === String(item.activityId),
+            );
             if (!activity) return null;
 
             return (
@@ -61,14 +76,17 @@ export default function DayColumn({
                 onRemove={() => onRemoveItem(item.activityId)}
                 isExpanded={expandedId === item.activityId}
                 onToggleExpand={() => {
-                  setExpandedId(expandedId === item.activityId ? null : item.activityId);
+                  setExpandedId(
+                    expandedId === item.activityId ? null : item.activityId,
+                  );
                 }}
+                conflict={hasConflict(item, dayItems)}
               />
             );
           })
         ) : (
-          <div 
-            className="text-center py-[64px] text-[13px] font-normal border border-dashed rounded-[8px]"
+          <div
+            className="text-center py-16 text-[13px] font-normal border border-dashed rounded-lg"
             style={{
               color: "var(--muted)",
               borderColor: "var(--border)",
