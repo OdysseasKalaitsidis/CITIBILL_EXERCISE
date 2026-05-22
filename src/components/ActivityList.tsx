@@ -1,18 +1,11 @@
-import { useState } from "react";
 import type { Activity } from "@/types";
-import { Search } from "lucide-react";
 import ActivityCard from "./ActivityCard";
-
-const normalizeText = (str: string): string => {
-  return str
-    .toLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "");
-};
+import FilterBar from "./FilterBar";
+import { useActivityFilter } from "@/hooks/useActivityFilter";
 
 interface ActivityListProps {
   activities: Activity[];
-  onAddClick: (activity: Activity) => void;
+  onAddClick: (activityItem: Activity) => void;
   scheduledIds: string[];
 }
 
@@ -21,118 +14,44 @@ export default function ActivityList({
   onAddClick,
   scheduledIds,
 }: ActivityListProps) {
-  const [filterText, setFilterText] = useState("");
-  const [activeTag, setActiveTag] = useState<string | null>(null);
-  const [sortBy, setSortBy] = useState<
-    "title_asc" | "title_desc" | "price_asc" | "price_desc" | null
-  >(null);
+  const {
+    filterText,
+    activeTag,
+    sortBy,
+    allTags,
+    processedActivities,
+    setFilterText,
+    setActiveTag,
+    setSortBy,
+  } = useActivityFilter(activities);
 
-  const allTags = [...new Set(activities.flatMap((a) => a.tags))];
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    setFilterText(event.target.value);
+  };
 
-  // Filter & Sort
-  const processedActivities = activities
-    .filter((act) => !activeTag || act.tags.includes(activeTag))
-    .filter((act) => {
-      const matchText = normalizeText(filterText);
-      return (
-        normalizeText(act.title).includes(matchText) ||
-        (act.description &&
-          normalizeText(act.description).includes(matchText)) ||
-        act.tags.some((t) => normalizeText(t).includes(matchText))
-      );
-    })
-    .sort((a, b) => {
-      if (sortBy === "price_asc") {
-        return a.price - b.price;
-      }
-      if (sortBy === "price_desc") {
-        return b.price - a.price;
-      }
-      if (sortBy === "title_asc") {
-        return a.title.localeCompare(b.title, "el");
-      }
-      if (sortBy === "title_desc") {
-        return b.title.localeCompare(a.title, "el");
-      }
-      return 0;
-    });
+  const handleSortChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    const selectedValue = event.target.value;
+    if (
+      selectedValue === "title_asc" ||
+      selectedValue === "title_desc" ||
+      selectedValue === "price_asc" ||
+      selectedValue === "price_desc"
+    ) {
+      setSortBy(selectedValue);
+    } else {
+      setSortBy(null);
+    }
+  };
 
   return (
     <div className="space-y-6">
-      {/* Top Bar: Search and Sort */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        {/* Search Input */}
-        <div className="relative grow flex items-center">
-          <Search
-            className="absolute left-4 w-4 h-4 pointer-events-none"
-            style={{ color: "var(--muted)" }}
-            strokeWidth={2}
-          />
-          <input
-            type="text"
-            placeholder="Αναζήτηση δραστηριότητας..."
-            value={filterText}
-            onChange={(e) => setFilterText(e.target.value)}
-            className="w-full pl-10 pr-4 py-2.5 text-sm font-normal focus:outline-none transition-all"
-            style={{
-              borderRadius: "24px",
-              border: "1px solid var(--border)",
-              boxShadow: "none",
-              backgroundColor: "var(--bg)",
-              color: "var(--text)",
-            }}
-          />
-        </div>
+      <FilterBar
+        filterText={filterText}
+        onSearchChange={handleSearchChange}
+        sortBy={sortBy}
+        onSortChange={handleSortChange}
+      />
 
-        {/* Sort Select */}
-        <div className="flex items-center min-w-50">
-          <select
-            value={sortBy || ""}
-            onChange={(e) => {
-              const val = e.target.value;
-              setSortBy(
-                val === "title_asc" ||
-                  val === "title_desc" ||
-                  val === "price_asc" ||
-                  val === "price_desc"
-                  ? val
-                  : null,
-              );
-            }}
-            className="w-full py-2.5 px-4 text-sm transition-all cursor-pointer font-normal focus:outline-none appearance-none"
-            style={{
-              borderRadius: "24px",
-              border: "1px solid var(--border)",
-              boxShadow: "none",
-              backgroundColor: "var(--bg)",
-              color: "var(--text)",
-              backgroundImage: `url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23717171' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e")`,
-              backgroundRepeat: "no-repeat",
-              backgroundPosition: "right 16px center",
-              backgroundSize: "16px",
-              paddingRight: "40px",
-            }}
-          >
-            <option value="" className="bg-bg text-muted">
-              Ταξινόμηση ανά...
-            </option>
-            <option value="price_asc" className="bg-bg text-text">
-              Τιμή (Χαμηλή σε Υψηλή)
-            </option>
-            <option value="price_desc" className="bg-bg text-text">
-              Τιμή (Υψηλή σε Χαμηλή)
-            </option>
-            <option value="title_asc" className="bg-bg text-text">
-              Τίτλος (Α - Ω)
-            </option>
-            <option value="title_desc" className="bg-bg text-text">
-              Τίτλος (Ω - Α)
-            </option>
-          </select>
-        </div>
-      </div>
-
-      {/* Tag Buttons Filter */}
       <div className="flex flex-wrap gap-2 pb-2">
         <button
           type="button"
@@ -146,33 +65,33 @@ export default function ActivityList({
         >
           Όλα
         </button>
-        {allTags.map((tag) => (
+        {allTags.map((tagItem) => (
           <button
-            key={tag}
+            key={tagItem}
             type="button"
-            onClick={() => setActiveTag(tag)}
+            onClick={() => setActiveTag(tagItem)}
             className="px-4 py-2 text-xs font-semibold rounded-full border transition-all cursor-pointer focus:outline-none"
             style={{
               backgroundColor:
-                activeTag === tag ? "var(--text)" : "transparent",
-              borderColor: activeTag === tag ? "var(--text)" : "var(--border)",
-              color: activeTag === tag ? "var(--bg)" : "var(--text)",
+                activeTag === tagItem ? "var(--text)" : "transparent",
+              borderColor:
+                activeTag === tagItem ? "var(--text)" : "var(--border)",
+              color: activeTag === tagItem ? "var(--bg)" : "var(--text)",
             }}
           >
-            {tag}
+            {tagItem}
           </button>
         ))}
       </div>
 
-      {/* Grid List */}
       {processedActivities.length > 0 ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          {processedActivities.map((activity) => (
+          {processedActivities.map((activityItem) => (
             <ActivityCard
-              key={activity.id}
-              activity={activity}
+              key={activityItem.id}
+              activity={activityItem}
               onAdd={onAddClick}
-              isAlreadySelected={scheduledIds.includes(String(activity.id))}
+              isAlreadySelected={scheduledIds.includes(activityItem.id)}
             />
           ))}
         </div>

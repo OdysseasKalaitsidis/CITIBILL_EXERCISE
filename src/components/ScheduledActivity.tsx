@@ -1,11 +1,7 @@
 import { useState } from "react";
 import type { ScheduledActivity as ScheduledType, Activity } from "@/types";
-
-const TIME_SLOTS = Array.from({ length: 48 }, (_, i) => {
-  const hours = String(Math.floor(i / 2)).padStart(2, "0");
-  const minutes = i % 2 === 0 ? "00" : "30";
-  return `${hours}:${minutes}`;
-});
+import { formatTimeRange, validateChange } from "@/utils/time";
+import TimeSlotSelectors from "./TimeSlotSelectors";
 
 interface ScheduledActivityProps {
   scheduledItem: ScheduledType;
@@ -16,11 +12,6 @@ interface ScheduledActivityProps {
   onToggleExpand: () => void;
   conflict: boolean;
 }
-
-const formatTimeRange = (start: string, end: string) => {
-  if (!start || !end) return "";
-  return `${start} - ${end}`;
-};
 
 export default function ScheduledActivity({
   scheduledItem,
@@ -42,6 +33,7 @@ export default function ScheduledActivity({
   const [prevStart, setPrevStart] = useState(currentStart);
   const [prevEnd, setPrevEnd] = useState(currentEnd);
 
+  // Sync state during rendering if props change
   if (currentStart !== prevStart || currentEnd !== prevEnd) {
     setPrevStart(currentStart);
     setPrevEnd(currentEnd);
@@ -50,25 +42,32 @@ export default function ScheduledActivity({
     setInlineError(null);
   }
 
+  const handleStartChange = (nextStart: string) => {
+    setLocalStart(nextStart);
+    const validationError = validateChange(nextStart, localEnd);
+    if (validationError) {
+      setInlineError(validationError);
+      return;
+    }
+    setInlineError(null);
+    onUpdate({ ...scheduledItem, startTime: nextStart });
+  };
+
+  const handleEndChange = (nextEnd: string) => {
+    setLocalEnd(nextEnd);
+    const validationError = validateChange(localStart, nextEnd);
+    if (validationError) {
+      setInlineError(validationError);
+      return;
+    }
+    setInlineError(null);
+    onUpdate({ ...scheduledItem, endTime: nextEnd });
+  };
+
   const timeRangeStr = formatTimeRange(
     scheduledItem.startTime,
     scheduledItem.endTime,
   );
-
-  const validateChange = (start: string, end: string): string | null => {
-    if (end <= start) {
-      return "Το τέλος πρέπει να είναι μετά την αρχή";
-    }
-    const parseTimeToMinutes = (t: string) => {
-      const [h, m] = t.split(":").map(Number);
-      return h * 60 + m;
-    };
-    const durationMinutes = parseTimeToMinutes(end) - parseTimeToMinutes(start);
-    if (durationMinutes > 7 * 60) {
-      return "Μέγιστη διάρκεια 7 ώρες";
-    }
-    return null;
-  };
 
   return (
     <div
@@ -78,13 +77,11 @@ export default function ScheduledActivity({
         backgroundColor: "transparent",
       }}
     >
-      {/* Top row */}
       <div
         onClick={onToggleExpand}
         className="flex items-center justify-between py-3 cursor-pointer select-none gap-2 text-left"
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 grow">
-          {/* Title */}
           <h4
             className="text-[13px] font-semibold leading-tight line-clamp-1"
             style={{ color: "var(--text)" }}
@@ -92,7 +89,6 @@ export default function ScheduledActivity({
             {activity.title}
           </h4>
 
-          {/* Time range */}
           <span
             className="text-xs font-normal leading-none"
             style={{ color: "var(--muted)" }}
@@ -100,7 +96,6 @@ export default function ScheduledActivity({
             {timeRangeStr}
           </span>
 
-          {/* Price */}
           <span
             className="leading-none"
             style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}
@@ -109,17 +104,20 @@ export default function ScheduledActivity({
           </span>
         </div>
 
-        {/* Remove Button */}
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
+          onClick={(event) => {
+            event.stopPropagation();
             onRemove();
           }}
           className="text-lg font-normal border-none bg-transparent cursor-pointer transition-colors p-1 shrink-0"
           style={{ color: "var(--muted)" }}
-          onMouseEnter={(e) => (e.currentTarget.style.color = "var(--text)")}
-          onMouseLeave={(e) => (e.currentTarget.style.color = "var(--muted)")}
+          onMouseEnter={(event) =>
+            (event.currentTarget.style.color = "var(--text)")
+          }
+          onMouseLeave={(event) =>
+            (event.currentTarget.style.color = "var(--muted)")
+          }
           title="Αφαίρεση"
         >
           ×
@@ -131,11 +129,10 @@ export default function ScheduledActivity({
           className="pb-2 text-left"
           style={{ fontSize: "11px", color: "#FF385C", fontWeight: 500 }}
         >
-          ⚠ Επικάλυψη ωραρίου
+          Επικάλυψη ωραρίου
         </div>
       )}
 
-      {/* Expandable selectors section */}
       <div
         style={{
           maxHeight: isExpanded ? "150px" : "0px",
@@ -144,93 +141,13 @@ export default function ScheduledActivity({
         }}
         className="w-full"
       >
-        <div className="grid grid-cols-2 gap-4 pb-3 pt-1">
-          {/* Από Selector */}
-          <div className="space-y-1 text-left">
-            <span
-              className="text-[10px] uppercase tracking-wider font-semibold"
-              style={{ color: "var(--muted)" }}
-            >
-              Από
-            </span>
-            <select
-              value={localStart}
-              onChange={(e) => {
-                setLocalStart(e.target.value);
-                const nextStart = e.target.value;
-                const nextEnd = localEnd;
-
-                const err = validateChange(nextStart, nextEnd);
-                if (err) {
-                  setInlineError(err);
-                  return;
-                }
-
-                setInlineError(null);
-                onUpdate({ ...scheduledItem, startTime: nextStart });
-              }}
-              className="w-full text-xs py-1.5 px-2.5 rounded focus:outline-none cursor-pointer"
-              style={{
-                border: "1px solid var(--border)",
-                backgroundColor: "var(--bg)",
-                color: "var(--text)",
-              }}
-            >
-              {TIME_SLOTS.map((slot) => (
-                <option key={slot} value={slot} className="bg-bg text-text">
-                  {slot}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Έως Selector */}
-          <div className="space-y-1 text-left">
-            <span
-              className="text-[10px] uppercase tracking-wider font-semibold"
-              style={{ color: "var(--muted)" }}
-            >
-              Έως
-            </span>
-            <select
-              value={localEnd}
-              onChange={(e) => {
-                setLocalEnd(e.target.value);
-                const nextStart = localStart;
-                const nextEnd = e.target.value;
-
-                const err = validateChange(nextStart, nextEnd);
-                if (err) {
-                  setInlineError(err);
-                  return;
-                }
-
-                setInlineError(null);
-                onUpdate({ ...scheduledItem, endTime: nextEnd });
-              }}
-              className="w-full text-xs py-1.5 px-2.5 rounded focus:outline-none cursor-pointer"
-              style={{
-                border: "1px solid var(--border)",
-                backgroundColor: "var(--bg)",
-                color: "var(--text)",
-              }}
-            >
-              {TIME_SLOTS.map((slot) => (
-                <option key={slot} value={slot} className="bg-bg text-text">
-                  {slot}
-                </option>
-              ))}
-            </select>
-          </div>
-        </div>
-        {inlineError && (
-          <div
-            className="pb-3 text-left"
-            style={{ color: "var(--accent)", fontSize: "11px" }}
-          >
-            {inlineError}
-          </div>
-        )}
+        <TimeSlotSelectors
+          localStart={localStart}
+          localEnd={localEnd}
+          onStartChange={handleStartChange}
+          onEndChange={handleEndChange}
+          inlineError={inlineError}
+        />
       </div>
     </div>
   );

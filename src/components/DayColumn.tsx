@@ -1,6 +1,7 @@
 import { useState } from "react";
 import type { ScheduledActivity as ScheduledType, Activity } from "@/types";
 import ScheduledActivity from "./ScheduledActivity";
+import { hasConflict } from "@/utils/schedulingUtils";
 
 interface DayColumnProps {
   day: 1 | 2 | 3;
@@ -9,15 +10,6 @@ interface DayColumnProps {
   onUpdateItem: (activityId: string, updated: ScheduledType) => void;
   onRemoveItem: (activityId: string) => void;
   onDropActivity: (activityId: string) => void;
-}
-
-function hasConflict(item: ScheduledType, allItems: ScheduledType[]): boolean {
-  return allItems.some(
-    (other) =>
-      other.activityId !== item.activityId &&
-      item.startTime < other.endTime &&
-      item.endTime > other.startTime
-  );
 }
 
 export default function DayColumn({
@@ -32,21 +24,21 @@ export default function DayColumn({
 
   return (
     <div
-      onDragOver={(e) => {
-        e.preventDefault();
+      onDragOver={(event) => {
+        event.preventDefault();
         setIsDragOver(true);
       }}
-      onDragEnter={(e) => {
-        e.preventDefault();
+      onDragEnter={(event) => {
+        event.preventDefault();
         setIsDragOver(true);
       }}
       onDragLeave={() => setIsDragOver(false)}
-      onDrop={(e) => {
-        e.preventDefault();
+      onDrop={(event) => {
+        event.preventDefault();
         setIsDragOver(false);
         const activityId =
-          e.dataTransfer.getData("activityId") ||
-          e.dataTransfer.getData("text/plain");
+          event.dataTransfer.getData("activityId") ||
+          event.dataTransfer.getData("text/plain");
         if (activityId) {
           onDropActivity(activityId);
         }
@@ -58,29 +50,34 @@ export default function DayColumn({
           : "1px solid transparent",
       }}
     >
-      {/* Items list */}
       <div className="flex flex-col grow overflow-y-auto mb-4 pr-1">
         {dayItems.length > 0 ? (
-          dayItems.map((item) => {
+          dayItems.map((scheduledItem) => {
             const activity = activities.find(
-              (a) => String(a.id) === String(item.activityId),
+              (activityItem) => activityItem.id === scheduledItem.activityId,
             );
-            if (!activity) return null;
+            if (!activity) {
+              return null;
+            }
 
             return (
               <ScheduledActivity
-                key={item.activityId}
-                scheduledItem={item}
+                key={scheduledItem.activityId}
+                scheduledItem={scheduledItem}
                 activity={activity}
-                onUpdate={(updated) => onUpdateItem(item.activityId, updated)}
-                onRemove={() => onRemoveItem(item.activityId)}
-                isExpanded={expandedId === item.activityId}
+                onUpdate={(updated) =>
+                  onUpdateItem(scheduledItem.activityId, updated)
+                }
+                onRemove={() => onRemoveItem(scheduledItem.activityId)}
+                isExpanded={expandedId === scheduledItem.activityId}
                 onToggleExpand={() => {
                   setExpandedId(
-                    expandedId === item.activityId ? null : item.activityId,
+                    expandedId === scheduledItem.activityId
+                      ? null
+                      : scheduledItem.activityId,
                   );
                 }}
-                conflict={hasConflict(item, dayItems)}
+                conflict={hasConflict(scheduledItem, dayItems)}
               />
             );
           })

@@ -2,7 +2,7 @@ import type { Activity } from "@/types";
 
 interface ActivityCardProps {
   activity: Activity;
-  onAdd: (activity: Activity) => void;
+  onAdd: (activityItem: Activity) => void;
   isAlreadySelected: boolean;
 }
 
@@ -14,10 +14,10 @@ export default function ActivityCard({
   return (
     <div
       draggable={!isAlreadySelected}
-      onDragStart={(e) => {
+      onDragStart={(event) => {
         const idStr = String(activity.id);
-        e.dataTransfer.setData("activityId", idStr);
-        e.dataTransfer.setData("text/plain", idStr);
+        event.dataTransfer.setData("activityId", idStr);
+        event.dataTransfer.setData("text/plain", idStr);
       }}
       className="rounded-xl flex flex-col justify-between transition-colors duration-200 h-full text-left bg-bg border border-border p-4"
       style={{ cursor: isAlreadySelected ? "default" : "grab" }}
