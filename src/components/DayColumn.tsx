@@ -78,6 +78,7 @@ export default function DayColumn({
                   );
                 }}
                 conflict={hasConflict(scheduledItem, dayItems)}
+                dayItems={dayItems}
               />
             );
           })

@@ -11,6 +11,7 @@ interface ScheduledActivityProps {
   isExpanded: boolean;
   onToggleExpand: () => void;
   conflict: boolean;
+  dayItems: ScheduledType[];
 }
 
 export default function ScheduledActivity({
@@ -21,6 +22,7 @@ export default function ScheduledActivity({
   isExpanded,
   onToggleExpand,
   conflict,
+  dayItems,
 }: ScheduledActivityProps) {
   const [inlineError, setInlineError] = useState<string | null>(null);
 
@@ -29,77 +31,62 @@ export default function ScheduledActivity({
 
   const [localStart, setLocalStart] = useState(currentStart);
   const [localEnd, setLocalEnd] = useState(currentEnd);
+  const [prevTimes, setPrevTimes] = useState([currentStart, currentEnd]);
 
-  const [prevStart, setPrevStart] = useState(currentStart);
-  const [prevEnd, setPrevEnd] = useState(currentEnd);
-
-  // Sync state during rendering if props change
-  if (currentStart !== prevStart || currentEnd !== prevEnd) {
-    setPrevStart(currentStart);
-    setPrevEnd(currentEnd);
+  if (currentStart !== prevTimes[0] || currentEnd !== prevTimes[1]) {
+    setPrevTimes([currentStart, currentEnd]);
     setLocalStart(currentStart);
     setLocalEnd(currentEnd);
     setInlineError(null);
   }
 
+  const validateInlineChange = (start: string, end: string): string | null => {
+    const baseError = validateChange(start, end);
+    if (baseError) return baseError;
+
+    const hasOverlap = dayItems.some(
+      (otherItem) =>
+        otherItem.activityId !== scheduledItem.activityId &&
+        start < otherItem.endTime &&
+        end > otherItem.startTime,
+    );
+    return hasOverlap ? "Υπάρχει επικάλυψη ωραρίου με άλλη δραστηριότητα" : null;
+  };
+
   const handleStartChange = (nextStart: string) => {
     setLocalStart(nextStart);
-    const validationError = validateChange(nextStart, localEnd);
-    if (validationError) {
-      setInlineError(validationError);
-      return;
+    const err = validateInlineChange(nextStart, localEnd);
+    setInlineError(err);
+    if (!err) {
+      onUpdate({ ...scheduledItem, startTime: nextStart });
     }
-    setInlineError(null);
-    onUpdate({ ...scheduledItem, startTime: nextStart });
   };
 
   const handleEndChange = (nextEnd: string) => {
     setLocalEnd(nextEnd);
-    const validationError = validateChange(localStart, nextEnd);
-    if (validationError) {
-      setInlineError(validationError);
-      return;
+    const err = validateInlineChange(localStart, nextEnd);
+    setInlineError(err);
+    if (!err) {
+      onUpdate({ ...scheduledItem, endTime: nextEnd });
     }
-    setInlineError(null);
-    onUpdate({ ...scheduledItem, endTime: nextEnd });
   };
 
-  const timeRangeStr = formatTimeRange(
-    scheduledItem.startTime,
-    scheduledItem.endTime,
-  );
+  const timeRangeStr = formatTimeRange(scheduledItem.startTime, scheduledItem.endTime);
 
   return (
-    <div
-      className="relative flex flex-col transition-all duration-200"
-      style={{
-        borderBottom: "1px solid var(--border)",
-        backgroundColor: "transparent",
-      }}
-    >
+    <div className="relative flex flex-col border-b border-border bg-transparent transition-all duration-200">
       <div
         onClick={onToggleExpand}
         className="flex items-center justify-between py-3 cursor-pointer select-none gap-2 text-left"
       >
         <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-3 grow">
-          <h4
-            className="text-[13px] font-semibold leading-tight line-clamp-1"
-            style={{ color: "var(--text)" }}
-          >
+          <h4 className="text-[13px] font-semibold leading-tight line-clamp-1 text-text">
             {activity.title}
           </h4>
-
-          <span
-            className="text-xs font-normal leading-none"
-            style={{ color: "var(--muted)" }}
-          >
+          <span className="text-xs font-normal leading-none text-muted">
             {timeRangeStr}
           </span>
-
-          <span
-            className="leading-none"
-            style={{ fontSize: "13px", fontWeight: 600, color: "var(--text)" }}
-          >
+          <span className="text-[13px] font-semibold leading-none text-text">
             {activity.price === 0 ? "Δωρεάν" : `${activity.price.toFixed(2)}€`}
           </span>
         </div>
@@ -110,14 +97,7 @@ export default function ScheduledActivity({
             event.stopPropagation();
             onRemove();
           }}
-          className="text-lg font-normal border-none bg-transparent cursor-pointer transition-colors p-1 shrink-0"
-          style={{ color: "var(--muted)" }}
-          onMouseEnter={(event) =>
-            (event.currentTarget.style.color = "var(--text)")
-          }
-          onMouseLeave={(event) =>
-            (event.currentTarget.style.color = "var(--muted)")
-          }
+          className="text-lg font-normal border-none bg-transparent cursor-pointer transition-colors p-1 shrink-0 text-muted hover:text-text"
           title="Αφαίρεση"
         >
           ×
@@ -125,10 +105,7 @@ export default function ScheduledActivity({
       </div>
 
       {conflict && (
-        <div
-          className="pb-2 text-left"
-          style={{ fontSize: "11px", color: "#FF385C", fontWeight: 500 }}
-        >
+        <div className="pb-2 text-left text-[11px] font-medium text-accent">
           Επικάλυψη ωραρίου
         </div>
       )}
