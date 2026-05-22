@@ -36,3 +36,11 @@ dist-ssr
 # Agentic / Antigravity files
 .antigravitycli
 .gemini
+.dist
+
+# TypeScript build info
+*.tsbuildinfo
+
+# OS metadata files
+Thumbs.db
+desktop.ini
